@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <title>Web Remote Control Car Function</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <style>
+    body { text-align: center; font-size: 15pt; }
+    h1 { font-weight: bold; font-size: 25pt; }
+    h2 { font-weight: bold; font-size: 15pt; }
+    button {
+      height: 50px;
+      width: 125px;
+      background-color: #4CAF50; /* Green */
+      border: none;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 15px;
+      margin-right: 10px;
+    }
+
+    .Param {
+      display: none;
+    }
+
+    #runFunc {
+      display: none;
+    }
+
+    #movementControlButtons {
+      line-height: 60px;
+    }
+    
+    .slidecontainer {
+      width: 50%; /* Width of the outside container */
+      margin: auto;
+    }
+
+    /* The slider itself */
+    .slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 15px;
+      border-radius: 5px;  
+      background: #d3d3d3;
+      outline: none;
+      opacity: 0.7;
+      -webkit-transition: .2s;
+      transition: opacity .2s;
+    }
+
+    /* Mouse-over effects */
+    .slider:hover {
+      opacity: 1; /* Fully shown on mouse-over */
+    }
+
+    /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%; 
+      background: #4CAF50;
+      cursor: pointer;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #4CAF50;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <p>
+    <h1>Web Remote Control Car Function</h1>
+  </p>
+
+  <h2>
+
+    <p id="p1">
+      <label>Movement Control Buttons:</label>
+      <div id="movementControlButtons">
+        <button id="btnForward" onclick="forward()">Forward</button>
+        <br>
+				<button id="btnTurnL" onclick="turnLeft()">Left</button>
+        <button id="btnTurnLOnsite" onclick="turnLeftOnsite()">Left (On Site)</button>
+				<button id="btnTurnROnsite" onclick="turnRightOnsite()">Right (On Site)</button>
+        <button id="btnTurnR" onclick="turnRight()">Right</button>
+        <br>
+        <button id="btnBackward" onclick="backward()">Backward</button>
+        <br>
+        <button id="btnStop" onclick="stop()">Stop</button>
+      </div>
+    </p>
+
+    <p id="p2">
+      <label>Select Speed: <span id="speed"></span></label>
+      <div class="slidecontainer">
+        <input type="range" onchange="updateSliderTimer(this)" min="1" max="10" value="5" class="slider" id="speedSlider">
+      </div>
+    </p>
+      
+    <p id="p3">
+      <label>Choose the Function:</label>
+
+      <select id="chooseFunction" onchange="changeFunctionDisplay(this)">
+        <option value="none">None</option>
+        <option value="f1">Find without Obstacle</option>
+        <option value="f2">Find with Obstacle</option>
+        <option value="f3">Locate Redspot</option>
+        <option value="f4">Wireless Charging</option>
+        <option value="f5">Light Tracking</option>
+        <option value="f6">Measure IR</option>
+        <option value="f7">Measure Light</option>
+        <option value="f8">Measure Colour</option>
+        <option value="f9">Measure Power and Distance</option>
+      </select>
+
+      <div id="f1Param" class="Param">
+        <form>
+          <label>Starting X Coordinate:</label>
+          <input type="text" id="f1StartXCoor">
+          <br>
+          <label>Starting  Y Coordinate:</label>
+          <input type="text" id="f1StartYCoor">
+          <br>
+          <label>Facing Direction:</label>
+          <input type="text" id="f1Dir">
+          <br>
+          <label>Number of Destinations:</label>
+          <select id="f1NumDest" onchange="f1DisplayDestInput(this)"></select>
+          <div id="f1DestInput"></div>
+        </form>
+      </div>
+
+      <div id="f2Param" class="Param">
+        <form>
+          <label>Starting X Coordinate:</label>
+          <input type="text" id="f2StartXCoor" name="f2XCoor">
+          <br>
+          <label>Starting Y Coordinate:</label>
+          <input type="text" id="f2StartYCoor" name="f2YCoor">
+          <br>
+          <label>Facing Direction:</label>
+          <input type="text" id="f2Dir">
+          <br>
+          <label>Destination X:</label>
+          <input type="text" id="f2DestXCoor">
+          <br>
+          <label>Destination Y:</label>
+          <input type="text" id="f2DestYCoor">
+          <br>
+
+          <label>Number of Obstacles:</label>
+          <select id="f2NumObst" onchange="f2DisplayObstInput(this)"></select>
+          <div id="f2ObstInput"></div>
+        </form>
+      </div>
+
+      <div>
+        <button id="runFunc" onclick="runFunc()">Run Function</button>
+      </div>
+    </p>
+		
+  </h2>
+
+  <script>
+    ////////
+    // HTML Object Creation
+
+    // Create Options 1-10 for Function 1 Select Number of Destinations
+    for (var i=0; i<=10; i++){
+      var select = document.getElementById("f1NumDest");
+      var option = document.createElement("OPTION");
+      option.text = i;
+      option.value = i;
+      select.options.add(option);
+    }
+
+    // Create Options 1-10 for Function 2 Select Number of Obstacles
+    for (var i=0; i<=10; i++){
+      var select = document.getElementById("f2NumObst");
+      var option = document.createElement("OPTION");
+      option.text = i;
+      option.value = i;
+      select.options.add(option);
+    }
+
+    // Display Input boxes for Function 1 Destination Coordinates
+    function f1DisplayDestInput(selectObject) {
+      console.log(selectObject.value);
+      var display = document.getElementById("f1DestInput");
+      display.innerHTML = "";
+      for (var i=1; i<=selectObject.value; i++) {
+        var xLabel = document.createElement("LABEL");
+        var yLabel = document.createElement("LABEL");
+        var xInput = document.createElement("INPUT");
+        var yInput = document.createElement("INPUT");
+        xLabel.appendChild(document.createTextNode("Destination " + i + " X Coordinate:"));
+        yLabel.appendChild(document.createTextNode("Destination " + i + " Y Coordinate:"));
+        xInput.id = "f1Dest" + i + "XCoor";
+        yInput.id = "f1Dest" + i + "YCoor";
+        display.appendChild(xLabel);
+        display.appendChild(xInput);
+        display.appendChild(yLabel);
+        display.appendChild(yInput);
+        display.appendChild(document.createElement("br"));
+      }
+    }
+
+    // Display Input boxes for Function 2 Obstacles Coordinates
+    function f2DisplayObstInput(selectObject) {
+      console.log(selectObject.value);
+      var display = document.getElementById("f2ObstInput");
+      display.innerHTML = "";
+      for (var i=1; i<=selectObject.value; i++) {
+        var xLabel = document.createElement("LABEL");
+        var yLabel = document.createElement("LABEL");
+        var xInput = document.createElement("INPUT");
+        var yInput = document.createElement("INPUT");
+        xLabel.appendChild(document.createTextNode("Obstacle " + i + " X Coordinate:"));
+        yLabel.appendChild(document.createTextNode("Obstacle " + i + " Y Coordinate:"));
+        xInput.id = "f2Obst" + i + "XCoor";
+        yInput.id = "f2Obst" + i + "YCoor";
+        display.appendChild(xLabel);
+        display.appendChild(xInput);
+        display.appendChild(yLabel);
+        display.appendChild(yInput);
+        display.appendChild(document.createElement("br"));
+      }
+    }
+    
+    ////////
+    // Slider functions
+
+    var slider = document.getElementById("speedSlider");
+    var sliderVal = document.getElementById("speed");
+    sliderVal.innerHTML = slider.value;
+  
+    // Update the current slider value (each time you drag the slider handle)
+    slider.oninput = function() {
+      sliderVal.innerHTML = this.value;
+    }
+
+    var functionChooser = document.getElementById("chooseFunction");
+    function changeFunctionDisplay(selectObject) {
+      var items = document.getElementsByClassName("Param");
+
+      switch (functionChooser.value) {
+        case "none":
+          for (var i=0; i<items.length; i++) {
+            items[i].style.display = "none";
+            document.getElementById("runFunc").style.display = "none";
+          }
+          break;
+        default:
+          for (var i=0; i<items.length; i++) {
+            items[i].style.display = items[i].id == functionChooser.value + "Param" ? "block" : "none";
+            document.getElementById("runFunc").style.display = "inline-block";
+          }
+          break;
+      }
+    }
+
+    function runFunc() {
+      var speed = document.getElementById("speed").innerHTML;
+      var message;
+      switch (functionChooser.value) {
+        case ("f1"):
+          var f1startX = document.getElementById("f1StartXCoor").value;
+          var f1startY = document.getElementById("f1StartYCoor").value;
+          var f1startDir = document.getElementById("f1Dir").value;
+          var f1numDest = document.getElementById("f1NumDest").value;
+          var f1coorX;
+          var f1coorY;
+          var temp;
+
+          temp = "T/1/" + f1startDir + "-" + f1startX + f1startY + "/";
+          for (var i=1; i<=f1numDest; i++) {
+            f1coorX = document.getElementById("f1Dest" + i + "XCoor").value;
+            f1coorY = document.getElementById("f1Dest" + i + "YCoor").value;
+            temp += f1coorX + f1coorY + "-";
+          }
+          message = new Paho.MQTT.Message(temp);
+          message.destinationName = "GP12Car2";
+          mqtt.send(message);
+          break;
+        case ("f2"):
+          var f2startX = document.getElementById("f2StartXCoor").value;
+          var f2startY = document.getElementById("f2StartYCoor").value;
+          var f2startDir = document.getElementById("f2Dir").value;
+          var f2destX = document.getElementById("f2DestXCoor").value;
+          var f2destY = document.getElementById("f2DestYCoor").value;
+          var f2numObst = document.getElementById("f2NumObst").value;
+          var f2coorX;
+          var f2coorY;
+
+          temp = "T/2/" + f2startDir + "-" + f2startX + f2startY + "/" + f2destX + f2destY + "/";
+          for (var i=1; i<=f2numObst; i++) {
+            f2coorX = document.getElementById("f2Obst" + i + "XCoor").value;
+            f2coorY = document.getElementById("f2Obst" + i + "YCoor").value;
+            temp += f2coorX + f2coorY + "-";
+          }
+          message = new Paho.MQTT.Message(temp);
+          message.destinationName = "GP12Car2";
+          mqtt.send(message);
+          break;
+        case ("f3"):
+          message = new Paho.MQTT.Message("T/3");
+          message.destinationName = "GP12Car2";
+          mqtt.send(message);
+          break;
+        case ("f4"):
+          message = new Paho.MQTT.Message("T/4");
+          message.destinationName = "GP12Car2";
+          mqtt.send(message);
+          break;
+        case ("f5"):
+          message = new Paho.MQTT.Message("T/5");
+          message.destinationName = "GP12Car2";
+          mqtt.send(message);
+          break;
+        case ("f6"):
+          message = new Paho.MQTT.Message("T/6");
+          message.destinationName = "GP12Car2";
+          mqtt.send(message);
+          break;
+        case ("f7"):
+          message = new Paho.MQTT.Message("T/7");
+          message.destinationName = "GP12Car2";
+          mqtt.send(message);
+          break;
+        case ("f8"):
+          message = new Paho.MQTT.Message("T/8");
+          message.destinationName = "GP12Car2";
+          mqtt.send(message);
+          break;
+        case ("f9"):
+          message = new Paho.MQTT.Message("T/9");
+          message.destinationName = "GP12Car2";
+          mqtt.send(message);
+          break;
+      }
+    }
+
+    function forward() {
+      var slider = document.getElementById("speedSlider");
+      var speed = slider.value;
+      var message = new Paho.MQTT.Message("F/" + speed);
+      message.destinationName = "GP12Car2";
+      mqtt.send(message);
+    }
+
+    function turnLeft(move) {
+      var slider = document.getElementById("speedSlider");
+      var speed = slider.value;
+      var message = new Paho.MQTT.Message("L/" + speed);
+      message.destinationName = "GP12Car2";
+      mqtt.send(message);
+    }
+
+    function turnRight(move) {
+      var slider = document.getElementById("speedSlider");
+      var speed = slider.value;
+      var message = new Paho.MQTT.Message("R/" + speed);
+      message.destinationName = "GP12Car2";
+      mqtt.send(message);
+    }
+    function turnLeftOnsite(move) {
+      var slider = document.getElementById("speedSlider");
+      var speed = slider.value;
+      var message = new Paho.MQTT.Message("SL/" + speed);
+      message.destinationName = "GP12Car2";
+      mqtt.send(message);
+    }
+    function turnRightOnsite(move) {
+      var slider = document.getElementById("speedSlider");
+      var speed = slider.value;
+      var message = new Paho.MQTT.Message("SR/" + speed);
+      message.destinationName = "GP12Car2";
+      mqtt.send(message);
+    }
+
+    function backward() {
+      var slider = document.getElementById("speedSlider");
+      var speed = slider.value;
+      var message = new Paho.MQTT.Message("B/" + speed);
+      message.destinationName = "GP12Car2";
+      mqtt.send(message);
+    }
+
+    function stop() {
+      var message = new Paho.MQTT.Message("F/0");
+      message.destinationName = "GP12Car2";
+      mqtt.send(message);
+    }
+  </script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+  <script type = "text/javascript" language = "javascript">
+    var mqtt;
+    var reconnectTimeout = 2000;
+    var host = "192.168.137.1";
+    var port = 9001;
+
+    MQTTconnect();
+    onConnect();
+
+    function onConnect(){
+      console.log("Connected");
+      mqtt.subscribe("GP12Car2");
+    }
+
+    function MQTTconnect(){
+      console.log("connecting to " + host + " " + port);
+      mqtt = new Paho.MQTT.Client(host,port,"clientjs");
+      var options = {
+          timeout: 3,
+          onSuccess: onConnect,
+          onFailure: onFailure,
+      };
+      mqtt.onMessageArrived = onMessageArrived
+      mqtt.connect(options);
+    }
+
+    function onFailure(message){
+      console.log("Connection Attempt to Host " + host + " Failed");
+      setTimeout(MQTTconnect, reconnectTimeout);
+    }
+
+    function onMessageArrived(msg){
+      out_msg = "Message received " + msg.payloadString + "<br>";
+      out_msg = out_msg + "Message received Topic" + msg.destinationName;
+      console.log(out_msg);
+    }
+  </script>
+  
+</body>
+</html>
